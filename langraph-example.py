@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
-import chromadb
-from typing import Annotated, TypedDict
+from typing import  TypedDict
 from langchain_ollama import ChatOllama, OllamaEmbeddings
 from langchain_chroma import Chroma
 from langgraph.graph import StateGraph, END
@@ -35,12 +34,11 @@ def retrieve_node(state: GraphState):
     """Fetch data from the local Chroma server."""
     print(f"--- 19:02:55 | RETRIEVING FROM CHROMADB SERVER ---")
     question = state["question"]
-    # Retrieve relevant snippets
-    #docs = retriever.query(query_texts=[question], n_results=5)
-    docs = retriever.invoke(question)
+    # Retrieve relevant snippets max 2 documents. 
+    docs = retriever.invoke(question, k=2)
     context = "\n\n".join([doc.page_content for doc in docs])
-    print(f"Retrieved {len(docs) } documents from ChromaDB.")
-    print(f"Retrieved context: {context}")
+    print(f"Retrieved {len(docs) } documents from ChromaDB: {[doc.metadata for doc in docs]}")
+    #print(f"Retrieved context: {context}")
     return {"context": context}
 
 def generate_node(state: GraphState):
@@ -63,7 +61,7 @@ builder.add_edge("generate", END)
 app = builder.compile()
 
 # --- 5. EXECUTE ---
-inputs = {"question": "how to set up localhost chromadb clinet in Python?"}
+inputs = {"question": "how to set up localhost chromadb client in Python? How to avoid adding duplicate documents?"}
 final_state = app.invoke(inputs)
 
 print("\n--- FINAL RESPONSE ---")
